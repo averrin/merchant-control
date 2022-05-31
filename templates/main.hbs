@@ -1,0 +1,66 @@
+{{log 'merchant-control-template' this}}
+<form class="m-form">
+	<div class="flexcol">
+	    <p class="flexrow">
+	        <label for="clear">Clear inventory</label>
+	        <input type="checkbox" id="clear" name="clear" value="1"
+	            {{#if clear}}checked{{/if}}>
+	        <label for="fix_prices">Fix prices</label>
+	        <input type="checkbox" id="fix_prices" name="fix_prices" value="1"
+	            {{#if fix_prices}}checked{{/if}}>
+	    </p>
+	    <p class="flexrow">
+	        <label for="discount">Price discount (%)</label>
+	        <input type="number" min="0" max="100" id="discount" name="discount" {{#if (gt discount 0)}}value="{{discount}}"{{/if}} placeholder="0">
+	    </p>
+	    <p class="flexrow">
+	        <label for="max_price">Max price (gp)</label>
+	        <input type="number" min="0" id="max_price" name="max_price" {{#if (gt max_price 0)}}value="{{max_price}}"{{/if}} placeholder="0">
+	    </p>
+
+	    <p class="flexrow">
+	        <label for="currency">Add currency (roll gp formula)</label>
+	        <input type="text" id="currency" name="currency" {{#if (ne currency "")}}value="{{currency}}"{{/if}} placeholder="">
+	    </p>
+
+        {{#if lootsheet}}
+	    <p class="flexrow">
+	        <label for="convert_sheet">Convert charsheet</label>
+	        <input type="checkbox" id="convert_sheet" name="convert_sheet" value="1"
+	            {{#if convert_sheet}}checked{{/if}}>
+            <select name="sheet_type">
+                <option value="merchant" {{#if (eq sheet_type "merchant")}}selected{{/if}}>merchant</option>
+                <option value="loot" {{#if (eq sheet_type "loot")}}selected{{/if}}>loot</option>
+            </select>
+	    </p>
+	    {{/if}}
+
+        <div id=table-selectors class="flexcol">
+            {{#with this as | settings |}}
+                {{#each settings.tables}}
+                    {{#with this as | table |}}
+                    <div class="flexrow item">
+                        <label>Roll Table:</label>
+                        <select name="table-name-{{@index}}">
+                          {{#each settings.availableTables}}
+                            <option value="{{this}}" {{#if (eq this table.name)}}selected{{/if}}>{{this}}</option>
+                          {{/each}}
+                        </select>
+                <input type="number" min="0" name="num-items-{{@index}}" {{#if (gt table.count 0)}}value="{{table.count}}"{{/if}} placeholder="0" style="width: 60px"/>
+                        <button type='button' class='remove-button pseudo-button' data-action="remove-table" data-id="{{@index}}"><i class='fas fa-trash'></i></button>
+                    </div>
+                    {{/with}}
+                {{/each}}
+            {{/with}}
+        </div>
+
+        <button data-action="add-table" class="add-button">Add table</button>
+        <hr>
+
+	    <p class="flexrow">
+            <button data-action="exec" {{#if (eq selected 0)}}disabled=disabled{{/if}}>Populate</button>
+            <button data-action="update" {{#if (eq selected 0)}}disabled=disabled{{/if}}>Update</button>
+            <button data-action="close">Close</button>
+	    </p>
+	</div>
+</form>

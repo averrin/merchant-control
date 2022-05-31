@@ -1,0 +1,44 @@
+.pseudo-button {
+  background: transparent;
+  padding: 0;
+  color: black;
+  line-height: normal;
+  border: 0;
+  align-self: center;
+  width: 24px;
+}
+
+.pseudo-button > i {
+  margin-right: 0;
+}
+
+.pseudo-button:hover, .pseudo-button:focus {
+  box-shadow: none;
+  text-shadow: 0 0 5px red;
+}
+
+.m-form label {
+    min-width: 120px;
+    margin-left: 6px;
+    display: flex;
+    align-items: center;
+}
+
+.m-form select {
+    min-width: 120px;
+    margin-left: 6px;
+}
+
+.m-form input {
+    min-width: 60px;
+    margin-left: 6px;
+}
+
+.m-form .item {
+    padding: 6px;
+    background-color: #bbbbee;
+}
+
+.m-form .add-button {
+    margin-top: 6px;
+}
