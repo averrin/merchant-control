@@ -8,6 +8,8 @@ You need to create the "Merchants" folder for your roll tables.
 Or choose another name and change it in the settings.
 Next, select your merchant, add a couple of tables with counts, and press "Apply."
 
+Please, make sure, that all your tables are resetted before you start using this module!
+
 ## Supported systems
 - DnD5e
 

@@ -6,8 +6,9 @@
 
     import { XIcon } from "@rgossiaux/svelte-heroicons/solid";
     import {logger} from '../modules/helpers.js';
+    import {apply} from '../modules/logic.js';
     import {setting} from '../modules/settings.js';
-    import {moduleId, SETTINGS, rarityPrices} from '../constants.js';
+    import {moduleId, SETTINGS} from '../constants.js';
     import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/core';
     import { onDestroy } from 'svelte';
 
@@ -86,96 +87,10 @@
 
     const groupBy = (i) => i.group;
 
-    async function getRandomItem(rolltable) {
-	    await rolltable.reset();
-        const results = await game.betterTables.getBetterTableResults(rolltable);
-	    if (!results) {
-	        logger.error("roll failed");
-	        return null;
-	    }
-	    let item = results[0].data;
-	    let compendium = game.collections.get(item.collection)
-	    if (!compendium) {
-	        compendium = game.packs.get(item.collection)
- 	        if (compendium) {
-    		        const entry = compendium.index.getName(item.text);
-    		        if (entry) {
-      			        let eItem = await compendium.getDocument(entry._id);
-      			    logger.info(eItem);
-			        return eItem;
-		        }
-	        }
-	    } else {
-	        for (let [_id, citem] of compendium.entries()) {
-	            if (citem.data.name == item.text) {
-      			    logger.info(cItem);
-	                return citem;
-	            }
-	        }
-	    }
-	    logger.error("roll failed", item);
-	    return null;
-    }
 
     const isLootable = (item) => !['class', 'spell', 'feat'].includes(item.type);
 
     let fix_prices = true;
-    async function apply() {
-        await saveTables();
-        let token = selection;
-        await clearInventory(token);
-
-	    let updates = []
-	    for (let table of tables) {
-		    let rolltable = game.tables.find(t => t.data.name === table.table);
-		    logger.info("rolling", table, rolltable);
-			for (let i = 0; i < table.count; i++) {
-				let item = await getRandomItem(rolltable);
-				let t = 0;
-				while (t < 5 && item && (table.max_price > 0 && item.data.data.price > table.max_price)) {
-					item = await getRandomItem(rolltable);
-				}
-				if (!item || item == null || (table.max_price > 0 && item.data.data.price > table.max_price)) {console.warn("item is undefined or overpriced"); continue;}
-				const embeddedItems = [...token.actor.getEmbeddedCollection('Item').values()],
-          				originalItem = embeddedItems.find(i => i.name === item.data.name);
-				if (originalItem) {
-				    updates.push({_id: originalItem.data._id, "data.quantity": originalItem.data.data.quantity+1});
-				} else {
-					let items = [];
-					try {
-					    items = await token.actor.createEmbeddedDocuments("Item", [item.data]);
-					} catch (e) {
-					    logger.warn("Addition failed");
-					    continue;
-					}
-					if (items.length == 0) {
-					    logger.warn("Addition failed");
-					    continue;
-					}
-					item = items[0];
-                    if(item && fix_prices && (item.data.data.price == 0 || item.data.data.price == null)) {
-	                    let rarity = item.data.data.rarity;
-	                    let newPriceRange = rarityPrices[rarity];
-	                    let newPrice = Math.ceil(Math.random()*(newPriceRange[1]-newPriceRange[0])+newPriceRange[0]);
-                        item.data.data.price = newPrice;
-                        await token.actor.updateEmbeddedDocuments('Item', [{_id: item.data._id, "data.price": newPrice}]);
-                    }
-				}
-    		}
-		    await token.actor.updateEmbeddedDocuments('Item', updates);
-	    }
-
-        token.actor.update({"flags.lootsheetnpc5e.priceModifier.sell": 100-discount});
-	    await lsAPI?.makeObservable([selection]);
-    }
-
-    async function clearInventory(token) {
-	    let embeddedItems = [...token.actor.getEmbeddedCollection('Item').values()];
-        if (embeddedItems.length == 0) return;
-	    let ids = [];
-	    ids = embeddedItems.map(a => a.data._id);
-	    await token.actor.deleteEmbeddedDocuments("Item", ids);
-    }
     let coins = {};
     $: if(selection) coins = Object.entries(selection?.document.actor.getRollData().currency);
 
@@ -187,6 +102,11 @@
 
     function updateCurrency() {
         selection.actor.update({ 'data.currency': selection?.document.actor.getRollData().currency });
+    }
+
+    async function applyTables() {
+        await saveTables();
+        apply(selection, tables, fix_prices, discount);
     }
 </script>
 
@@ -300,7 +220,7 @@
 
                 </div>
 
-                <button class="ui-btn my-1" on:click={apply}>Apply</button>
+                <button class="ui-btn my-1" on:click={applyTables}>Apply</button>
             {/if}
 
 
