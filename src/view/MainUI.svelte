@@ -13,6 +13,8 @@
    import { moduleId, SETTINGS } from "../constants.js";
    import { ApplicationShell } from "@typhonjs-fvtt/runtime/svelte/component/core";
    import { onDestroy } from "svelte";
+   import Sortable from "./components/Sortable.svelte";
+   import FaArrowsAlt from "svelte-icons/fa/FaArrowsAlt.svelte";
 
    import { tokensStore, currentScene } from "../modules/stores.js";
 
@@ -60,7 +62,6 @@
       await saveTables();
    }
 
-   import SortableList from "svelte-sortable-list";
    let tables = [];
    $: tables = selection?.document.data.flags["merchant-control-tables"] || [];
 
@@ -165,10 +166,18 @@
 
          <button class="ui-btn ui-btn-outline ui-btn-primary ui-my-1" on:click={(e) => addTable()}>Add Table</button>
 
-         <SortableList list={tables} key="id" let:item let:index on:sort={sortTables}>
+         <Sortable items={tables} let:item let:index on:change={sortTables} options={{ handle: ".handle" }}>
             <div
-               class="ui-flex ui-flex-row ui-bg-white ui-rounded-xl ui-shadow-lg ui-p-2 ui-items-center ui-space-x-2 ui-cursor-move"
+               class="ui-flex ui-flex-row ui-bg-white ui-rounded-xl ui-shadow-lg ui-p-2 ui-items-center ui-gap-3 ui-cursor-move ui-my-1"
             >
+               <button
+                  class="ui-btn ui-btn-square ui-btn-ghost handle ui-justify-self-start ui-cursor-move"
+                  style="color: #46525d; padding: 8px"
+                  title="move"
+               >
+                  <FaArrowsAlt />
+               </button>
+
                <Select
                   items={availableTables}
                   {groupBy}
@@ -202,7 +211,7 @@
                   <XIcon class="ui-h-8 ui-w-8" />
                </button>
             </div>
-         </SortableList>
+         </Sortable>
          {#if tables.length > 0}
             <div
                class="ui-form-control ui-flex ui-flex-row ui-bg-white ui-rounded-xl ui-shadow-lg ui-p-2 ui-items-center ui-space-x-2"
